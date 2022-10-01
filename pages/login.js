@@ -1,20 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { firebase } from "../lib/firebase_config"
 import { useRouter } from "next/router"
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth"
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
 import { Alert, Button, InputLabel, Snackbar, TextField } from "@mui/material"
 import Link from "next/link"
 
 export default function Login() {
-  const router = useRouter()
+  const router = useRouter();
   const auth = getAuth(firebase);
+  const [isLoggin, setIsLoggin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+  const isFilledForm = (email !== "" && password !== "")
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const uid = user.uid;
+        setIsLoggin(true);
+      } else {
+        setIsLoggin(false);
+      }
+    });
+  });
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const temp = await signInWithEmailAndPassword(auth, email, password)
-    console.log(temp.user.accessToken)
+    await signInWithEmailAndPassword(auth, email, password)
     router.push("/")
   }
   const handleChangeEmail = (e) => {
@@ -26,6 +36,14 @@ export default function Login() {
   return (<>
 
     <h1>ログイン</h1>
+    <Snackbar
+     open={isLoggin}
+     anchorOrigin={{ vertical: "top", horizontal: "center" }}
+     autoHideDuration={3000}
+     key={"top" + "center"}
+    >
+      <Alert severity="warning">既にログインしてます</Alert>
+    </Snackbar>
     <form onSubmit={handleSubmit}>
       <InputLabel>メールアドレス</InputLabel>
         <TextField
@@ -41,7 +59,7 @@ export default function Login() {
           size="small"
           onChange={handleChangePassword}
         />
-        <Button type="submit" variant="outlined">
+        <Button disabled={!isFilledForm} type="submit" variant="outlined">
           ログイン
         </Button>
       </form>
