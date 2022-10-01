@@ -1,9 +1,24 @@
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
+import { firebase } from "../lib/firebase_config"
 import Link from 'next/link'
 import styles from '../styles/Home.module.css'
-
+import Logout from '../components/logout'
+import { getAuth, onAuthStateChanged } from "firebase/auth"
 export default function Home() {
+  const auth = getAuth(firebase);
+  const [isLoggin, setIsLoggin] = useState(false);
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggin(true);
+      } else {
+        setIsLoggin(false);
+      }
+    });
+  });
+
   return (
     <div className={styles.container}>
       <Head>
